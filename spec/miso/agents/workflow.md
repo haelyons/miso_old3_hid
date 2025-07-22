@@ -1,9 +1,11 @@
 # workflow
 *how agents should implement user requests*
 
-A user request should result in modifications at four levels of abstraction:
+A user request should result in modifications at five levels of abstraction:
 
 **specification** : the agent adds a new feature specification snippet, or modifies an existing one. To maintain brevity and keep the number of children below 7, the agent may also have to modify the tree structure.
+
+**test writing** : in the metafolder, the agent should create a file called `testing.md` that specifies how to validate the feature works correctly. Test specifications serve as executable requirements derived directly from the specification.
 
 **pseudocode** : in the metafolder, the agent should create a file called `pseudocode.md` that contains human-readable text and pseudocode sections (using back-ticks). The file should introduce the new function/command(s), show how to invoke them (natural language) and describe the intended output, using examples. Pseudocode should be natural language only; no actual code should be included.
 

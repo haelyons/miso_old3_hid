@@ -11,6 +11,7 @@ When working code has bugs or needs immediate fixes, the standard workflow can b
 - Get the system running properly as quickly as possible
 
 **Document After (Strategic):**  
+- Update `testing.md` to specify tests covering the bug scenario and validation of the fix
 - Update `pseudocode.md` to reflect the conceptual changes
 - Update `implementation.md` to capture the specific technical fixes
 - Ensure specifications contain enough detail to regenerate the same working code

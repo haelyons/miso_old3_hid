@@ -26,12 +26,13 @@ Each specification snippet should:
 
 ## Agent Workflow
 
-When implementing user requests, follow this four-level abstraction approach:
+When implementing user requests, follow this five-level abstraction approach:
 
 1. **Specification**: Add/modify feature specification snippets in `spec/`
-2. **Pseudocode**: Create `pseudocode.md` with human-readable descriptions and natural language pseudocode
-3. **Implementation**: Create `implementation.md` with actual code examples in the target language  
-4. **Code**: Write runnable code in a `code/` subfolder within the feature's metafolder
+2. **Test Writing**: Create `testing.md` with executable requirements as concise bullet points
+3. **Pseudocode**: Create `pseudocode.md` with human-readable descriptions and natural language pseudocode
+4. **Implementation**: Create `implementation.md` with actual code examples in the target language  
+5. **Code**: Write runnable code in a `code/` subfolder within the feature's metafolder
 
 ## Development Commands
 
@@ -50,7 +51,37 @@ When implementing user requests, follow this four-level abstraction approach:
 - Shows: `miso > agents > workflow` style trails
 - Files: `spec/miso/editor/.breadcrumbs/`
 
-## Recent Session Summary (2025-07-22)
+✅ **Testing System**: Complete TDD-inspired testing workflow with Jest infrastructure
+- Central infrastructure: `spec/miso/agents/workflow/.testing/code/` (Jest, test discovery)
+- Test commands: `npm test` (system-wide), `npx jest path/to/feature.test.js` (feature-specific)
+- Working tests: Breadcrumbs feature fully tested with 12 passing tests
+
+## Recent Session Summary (2025-07-22 Part 2)
+
+**Testing System Development:**
+1. **Comprehensive Testing Workflow** - Implemented complete TDD-inspired testing system
+   - Created central testing infrastructure with Jest and jsdom
+   - Implemented automatic test discovery across all feature metafolders
+   - Added working breadcrumbs tests with 12 passing test cases
+   
+2. **Updated Miso Workflow** - Revised 5-level abstraction to be test-driven
+   - Moved test writing to 2nd position: specification → test writing → pseudocode → implementation → code
+   - Tests now serve as executable requirements derived from specifications
+   - Refined language from "testing" to "test writing" for precision
+
+**Testing Architecture:**
+- Central infrastructure: `spec/miso/agents/workflow/.testing/code/` (package.json, Jest config, test discovery)
+- Feature-specific tests: Tests live in feature `code/` folders (e.g., `spec/miso/editor/.breadcrumbs/code/breadcrumbs.test.js`)
+- Test commands: `npm test` (system-wide), `npx jest feature.test.js` (feature-specific)
+- Test format: Single-sentence bullet points organized by category, under 250 words
+
+**Documentation Updates:**
+- `spec/miso/agents/workflow.md` - Updated 5-level workflow with test writing
+- `spec/miso/agents/workflow/testing.md` - Complete testing specification
+- `spec/miso/agents/workflow/testing/organization.md` - Test file organization principles
+- `spec/miso/agents/workflow/.testing/implementation.md` - Testing command reference
+
+## Previous Session Summary (2025-07-22 Part 1)
 
 **Bugfixes Applied Using Miso Workflow:**
 1. **Resizable Columns** - Fixed missing column resize functionality in editor

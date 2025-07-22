@@ -1,0 +1,20 @@
+{
+  "name": "miso-tests",
+  "version": "1.0.0",
+  "description": "Central testing infrastructure for miso system",
+  "scripts": {
+    "test": "node run-tests.js",
+    "test:direct": "jest",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": ["<rootDir>/miso/agents/workflow/.testing/code/test-setup.js"],
+    "rootDir": "../../../../..",
+    "testMatch": ["**/.*/code/*.test.js"]
+  }
+}
