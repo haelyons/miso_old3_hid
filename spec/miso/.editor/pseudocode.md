@@ -23,7 +23,11 @@ The editor is a web application with a Flask backend serving snippet data and a 
 
 `handle_navigation(snippet_path)` - Load new snippet content and update both views when user clicks on a child or navigates up.
 
+`navigate_to_parent()` - Calculate parent snippet path by removing last segment and adding .md extension.
+
 `handle_mobile_gestures()` - Detect left/right swipes on mobile and show/hide child view accordingly.
+
+`handle_column_resize()` - Allow users to drag the splitter between columns to resize them on desktop.
 
 ## Data Flow
 

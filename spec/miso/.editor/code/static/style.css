@@ -17,10 +17,10 @@ body {
 
 .content-view {
     flex: 1;
+    min-width: 200px;
     padding: 40px;
     overflow-y: auto;
     background: #fff;
-    border-right: 1px solid #e1e4e8;
 }
 
 .content-view h1 {
@@ -44,12 +44,25 @@ body {
     font-style: italic;
 }
 
+.splitter {
+    width: 4px;
+    background: #e1e4e8;
+    cursor: col-resize;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+}
+
+.splitter:hover {
+    background: #0366d6;
+}
+
 .child-view {
     width: 350px;
+    min-width: 200px;
     padding: 20px;
     background: #f6f8fa;
     overflow-y: auto;
-    border-left: 1px solid #e1e4e8;
+    flex-shrink: 0;
 }
 
 .child-view h3 {

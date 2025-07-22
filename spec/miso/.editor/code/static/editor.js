@@ -3,6 +3,7 @@ class SnippetEditor {
         this.currentPath = "miso.md";
         this.contentView = document.getElementById('content-view');
         this.childView = document.getElementById('child-view');
+        this.splitter = document.getElementById('splitter');
         this.mobileOverlay = document.getElementById('mobile-overlay');
         this.isMobile = window.innerWidth <= 768;
         
@@ -12,6 +13,11 @@ class SnippetEditor {
     init() {
         // Load initial snippet
         this.loadSnippet("miso.md");
+        
+        // Setup resize handlers
+        if (!this.isMobile) {
+            this.setupResizeHandlers();
+        }
         
         // Setup mobile handlers
         if (this.isMobile) {
@@ -162,11 +168,12 @@ class SnippetEditor {
         // Navigate to parent by removing the last segment
         const pathParts = this.currentPath.split('/');
         if (pathParts.length > 1) {
-            pathParts.pop(); // Remove filename
-            pathParts.pop(); // Remove directory
-            const parentPath = pathParts.join('/');
+            // Remove the filename to get parent directory
+            pathParts.pop();
+            const parentPath = pathParts.join('/') + '.md';
             this.loadSnippet(parentPath);
         } else {
+            // Already at root, stay at root
             this.loadSnippet("miso.md");
         }
         
@@ -239,6 +246,38 @@ class SnippetEditor {
         setTimeout(() => {
             hint.remove();
         }, 4000);
+    }
+    
+    setupResizeHandlers() {
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+        
+        this.splitter.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            startX = e.clientX;
+            startWidth = parseInt(document.defaultView.getComputedStyle(this.childView).width, 10);
+            document.addEventListener('mousemove', resize);
+            document.addEventListener('mouseup', stopResize);
+            document.body.style.cursor = 'col-resize';
+            e.preventDefault();
+        });
+        
+        const resize = (e) => {
+            if (!isResizing) return;
+            const newWidth = startWidth - (e.clientX - startX);
+            const minWidth = 200;
+            const maxWidth = window.innerWidth - 300; // Leave space for content
+            const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+            this.childView.style.width = clampedWidth + 'px';
+        };
+        
+        const stopResize = () => {
+            isResizing = false;
+            document.body.style.cursor = '';
+            document.removeEventListener('mousemove', resize);
+            document.removeEventListener('mouseup', stopResize);
+        };
     }
 }
 

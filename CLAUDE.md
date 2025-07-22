@@ -50,7 +50,28 @@ When implementing user requests, follow this four-level abstraction approach:
 - Shows: `miso > agents > workflow` style trails
 - Files: `spec/miso/editor/.breadcrumbs/`
 
-## Recent Session Summary (2025-01-22)
+## Recent Session Summary (2025-07-22)
+
+**Bugfixes Applied Using Miso Workflow:**
+1. **Resizable Columns** - Fixed missing column resize functionality in editor
+   - Added splitter element between content and child views
+   - Implemented drag handlers with min/max width constraints
+   - Added visual feedback with hover effects on splitter
+2. **Mobile Navigation** - Fixed "Error loading snippet" on swipe-back gesture
+   - Corrected parent path construction in `navigateUp()` function
+   - Proper handling of path segments and .md extension addition
+
+**Implementation Details:**
+- HTML: Added `<div class="splitter" id="splitter"></div>` between columns
+- CSS: Added `.splitter` styles with `col-resize` cursor and hover effects
+- JavaScript: Added `setupResizeHandlers()` method with mouse event handling
+- Fixed path logic: `"miso/agents.md"` → `"miso.md"` (not empty string)
+
+**Meta Documentation Updated:**
+- `spec/miso/.editor/pseudocode.md` - Added resize and navigation functions
+- `spec/miso/.editor/implementation.md` - Updated with technical fixes
+
+## Previous Session Summary (2025-01-22)
 
 **Implemented:**
 1. **Editor Feature** - Full specification → pseudocode → implementation → code workflow

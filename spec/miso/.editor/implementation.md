@@ -56,6 +56,7 @@ class SnippetEditor {
         this.currentPath = "miso.md";
         this.contentView = document.getElementById('content-view');
         this.childView = document.getElementById('child-view');
+        this.splitter = document.getElementById('splitter');
     }
     
     async loadSnippet(path) {
@@ -66,7 +67,19 @@ class SnippetEditor {
     init() {
         // CRITICAL: Load miso.md as default root snippet
         this.loadSnippet("miso.md");
-        // Setup mobile handlers, resize listeners
+        // Setup column resize handlers for desktop
+        if (!this.isMobile) {
+            this.setupResizeHandlers();
+        }
+        // Setup mobile handlers
+    }
+    
+    setupResizeHandlers() {
+        // Mouse down on splitter starts resize
+        this.splitter.addEventListener('mousedown', startResize);
+        // Track mouse movement during resize
+        // Clamp width between min/max boundaries
+        // Update child view width dynamically
     }
     
     renderContent(snippet) {
@@ -77,6 +90,12 @@ class SnippetEditor {
     renderChildren(children) {
         // Create clickable list of child snippets
         // Each shows title and one-line summary
+    }
+    
+    navigateUp() {
+        // Split current path and remove filename
+        // Join remaining parts and add .md extension
+        // Handle root case (stay at miso.md)
     }
 }
 ```
@@ -109,10 +128,10 @@ class MobileHandler {
 spec/miso/.editor/code/
 ├── app.py              # Flask server
 ├── templates/
-│   └── index.html      # Main page template
+│   └── index.html      # Main page template with splitter element
 ├── static/
-│   ├── style.css       # Responsive CSS
-│   └── editor.js       # Frontend JavaScript
+│   ├── style.css       # Responsive CSS with resizable columns
+│   └── editor.js       # Frontend JavaScript with resize handlers
 └── requirements.txt    # Python dependencies
 ```
 
@@ -125,14 +144,28 @@ spec/miso/.editor/code/
 
 .content-view {
     flex: 1;
+    min-width: 200px;
     padding: 20px;
     overflow-y: auto;
 }
 
+.splitter {
+    width: 4px;
+    background: #e1e4e8;
+    cursor: col-resize;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+}
+
+.splitter:hover {
+    background: #0366d6;
+}
+
 .child-view {
-    width: 300px;
-    border-left: 1px solid #ccc;
+    width: 350px;
+    min-width: 200px;
     padding: 20px;
+    flex-shrink: 0;
 }
 
 @media (max-width: 768px) {
