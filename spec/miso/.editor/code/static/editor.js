@@ -67,8 +67,8 @@ class SnippetEditor {
         `).join('');
         
         const title = snippet.children.length > 0 ? 
-            `<h3>Children (${snippet.children.length})</h3>` : 
-            '<h3>No children</h3>';
+            `<h3>children (${snippet.children.length})</h3>` : 
+            '<h3>no children</h3>';
         
         this.childView.innerHTML = title + childrenHtml;
     }
