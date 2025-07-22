@@ -10,3 +10,5 @@ A user request should result in modifications at four levels of abstraction:
 **implementation** : also in the metafolder, the agent should create a file called `implementation.md`, derived from `pseudocode.md`. This should contain human-readable descriptions with code sections (back-ticks) in whatever actual programming language the user / agent prefers.
 
 **code** : in the metafolder, the agent should write and maintain all runnable code and scripts required to implement the feature, stored in a `code/` subfolder.
+
+**Alternative Workflow:** When working with existing code that needs immediate fixes, see the bugfix workflow for rapid iteration while maintaining specification integrity.

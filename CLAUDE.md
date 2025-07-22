@@ -35,7 +35,40 @@ When implementing user requests, follow this four-level abstraction approach:
 
 ## Development Commands
 
-This project currently has no package.json, Makefile, or build system configured. All development is specification-driven through the markdown files in `spec/`.
+**Current Implementation Status:**
+
+✅ **Editor Feature**: Complete Flask/JavaScript web editor with two-column interface
+- Run: `./editor.sh` (auto-kills existing processes on port 5000)
+- URL: http://localhost:5000
+- Files: `spec/miso/.editor/code/` (Flask app, HTML, CSS, JS)
+
+✅ **Observability System**: Playwright browser monitoring for agent visibility
+- Files: `spec/miso/agents/.observability/code/`
+- Monitor endpoints: `/api/monitor/screenshot`, `/api/monitor/state`, `/api/monitor/logs`
+
+✅ **Breadcrumbs Navigation**: Clickable path navigation (replaced back button)
+- Shows: `miso > agents > workflow` style trails
+- Files: `spec/miso/editor/.breadcrumbs/`
+
+## Recent Session Summary (2025-01-22)
+
+**Implemented:**
+1. **Editor Feature** - Full specification → pseudocode → implementation → code workflow
+2. **Observability System** - Playwright monitoring with agent-accessible endpoints  
+3. **Breadcrumbs Navigation** - Enhanced UX replacing simple back buttons
+4. **Bugfix Workflow** - New workflow for rapid fixes while maintaining spec integrity
+5. **Launch Script** - `editor.sh` for easy startup with port cleanup
+
+**Key Fixes Applied:**
+- JavaScript initialization with "miso.md" instead of empty path
+- Flask route handling for both empty and explicit paths
+- Breadcrumbs path parsing (avoid duplicate "miso" segments)
+- Snippet title format (remove .md extensions from titles)
+
+**Documentation Added:**
+- `spec/miso/agents/workflow/bugfix.md` - Fix-first, document-after workflow
+- Complete pseudocode/implementation docs for all features
+- Updated snippet guidelines to prevent title formatting issues
 
 ## Key Principles
 
@@ -43,3 +76,4 @@ This project currently has no package.json, Makefile, or build system configured
 - Specifications should enable complete code regeneration in any language/platform
 - Keep snippets brief and hierarchical for both human and LLM readability
 - Agent conversations should focus on understanding and modifying the feature tree first, then generating code
+- Use bugfix workflow for rapid iteration: fix code first, then update specifications

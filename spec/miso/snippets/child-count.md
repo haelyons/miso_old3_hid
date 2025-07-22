@@ -1,4 +1,4 @@
-# child-count.md
+# child-count
 *restricting the number of child snippets*
 
 It's been shown that people are able to comfortably hold up to 7 or 8 items in working memory. For this reason, we restrict the number of children of a snippet to 6; comfortably within cognitive load limits, but not forcing the tree to become too deep.

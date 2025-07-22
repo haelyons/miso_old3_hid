@@ -1,0 +1,169 @@
+from flask import Flask, jsonify, render_template, send_from_directory
+import os
+import markdown
+import re
+import json
+from datetime import datetime
+from pathlib import Path
+
+app = Flask(__name__)
+
+class SnippetLoader:
+    def __init__(self, spec_root="spec"):
+        self.spec_root = Path(spec_root)
+    
+    def scan_directory(self, path):
+        """Walk directory tree and build hierarchical structure"""
+        full_path = self.spec_root / path if path != "." else self.spec_root
+        if not full_path.exists():
+            return []
+        
+        children = []
+        for item in full_path.iterdir():
+            if item.is_file() and item.suffix == '.md':
+                children.append({
+                    'type': 'file',
+                    'name': item.name,
+                    'path': str(item.relative_to(self.spec_root))
+                })
+            elif item.is_dir() and not item.name.startswith('.'):
+                children.append({
+                    'type': 'dir',
+                    'name': item.name,
+                    'path': str(item.relative_to(self.spec_root))
+                })
+        
+        return sorted(children, key=lambda x: (x['type'], x['name']))
+    
+    def load_snippet(self, file_path):
+        """Load markdown file and extract title, summary, content"""
+        if file_path == "":
+            file_path = "miso.md"
+        
+        full_path = self.spec_root / file_path
+        if not full_path.exists():
+            return None
+        
+        with open(full_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # Extract title (first # header)
+        title_match = re.search(r'^# (.+)$', content, re.MULTILINE)
+        title = title_match.group(1) if title_match else "Untitled"
+        
+        # Extract summary (first *emphasized* text after title)
+        summary_match = re.search(r'\*(.+?)\*', content)
+        summary = summary_match.group(1) if summary_match else ""
+        
+        # Get parent path
+        parent_path = str(full_path.parent.relative_to(self.spec_root))
+        if parent_path == ".":
+            parent_path = None
+        
+        # Get children
+        dir_path = full_path.parent / full_path.stem
+        children = []
+        if dir_path.exists():
+            for child_file in dir_path.glob('*.md'):
+                child_content = child_file.read_text(encoding='utf-8')
+                child_title_match = re.search(r'^# (.+)$', child_content, re.MULTILINE)
+                child_title = child_title_match.group(1) if child_title_match else child_file.stem
+                
+                child_summary_match = re.search(r'\*(.+?)\*', child_content)
+                child_summary = child_summary_match.group(1) if child_summary_match else ""
+                
+                children.append({
+                    'title': child_title,
+                    'summary': child_summary,
+                    'path': str(child_file.relative_to(self.spec_root))
+                })
+        
+        return {
+            'title': title,
+            'summary': summary,
+            'content': content,
+            'children': children,
+            'parent_path': parent_path
+        }
+
+loader = SnippetLoader()
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/api/snippet')
+@app.route('/api/snippet/<path:snippet_path>')
+def get_snippet(snippet_path=""):
+    snippet = loader.load_snippet(snippet_path)
+    if snippet is None:
+        return jsonify({'error': 'Snippet not found'}), 404
+    return jsonify(snippet)
+
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    return send_from_directory('static', filename)
+
+# Observability endpoints
+@app.route('/api/monitor/screenshot')
+def get_latest_screenshot():
+    """Return path to most recent screenshot for agent access"""
+    screenshot_dir = Path("spec/miso/agents/.observability/code/logs/screenshots")
+    latest_path = screenshot_dir / "latest.png"
+    
+    if latest_path.exists():
+        return jsonify({
+            "status": "success",
+            "screenshot_path": str(latest_path.resolve()),
+            "timestamp": datetime.fromtimestamp(latest_path.stat().st_mtime).isoformat()
+        })
+    else:
+        return jsonify({"status": "no_screenshot", "message": "No screenshot available"}), 404
+
+@app.route('/api/monitor/state')
+def get_browser_state():
+    """Return current browser state as JSON"""
+    state_dir = Path("spec/miso/agents/.observability/code/logs/states")
+    latest_path = state_dir / "latest.json"
+    
+    if latest_path.exists():
+        with open(latest_path, 'r') as f:
+            state = json.load(f)
+        return jsonify(state)
+    else:
+        return jsonify({"status": "no_state", "message": "No state available"}), 404
+
+@app.route('/api/monitor/logs')
+def get_interaction_logs():
+    """Return recent user interaction history"""
+    log_file = Path("spec/miso/agents/.observability/code/logs/interactions.jsonl")
+    
+    if log_file.exists():
+        logs = []
+        with open(log_file, 'r') as f:
+            for line in f:
+                logs.append(json.loads(line.strip()))
+        
+        # Return last 50 interactions
+        return jsonify({"interactions": logs[-50:]})
+    else:
+        return jsonify({"interactions": []})
+
+@app.route('/api/monitor/console')
+def get_console_logs():
+    """Return recent console output"""
+    log_file = Path("spec/miso/agents/.observability/code/logs/console.jsonl")
+    
+    if log_file.exists():
+        logs = []
+        with open(log_file, 'r') as f:
+            for line in f:
+                logs.append(json.loads(line.strip()))
+        
+        # Return last 100 console messages
+        return jsonify({"console_logs": logs[-100:]})
+    else:
+        return jsonify({"console_logs": []})
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)

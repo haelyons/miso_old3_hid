@@ -3,6 +3,8 @@
 
 All snippets should start with a '#' title followed by an *emphasized* one-line summary.
 
+**Important:** Snippet titles should not include the `.md` file extension - use `# child-count` not `# child-count.md`.
+
 A good snippet should be short - a maximum of about 250 words, or about the size of an abstract of a paper, a tweet, or a paragraph - and should summarise the purpose of the feature it describes.
 
 The goal is for users and LLMs to be able to quickly read and understand a topic at the top-level, only drilling down to sub-features if required.

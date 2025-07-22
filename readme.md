@@ -1,7 +1,7 @@
 ᕦ(ツ)ᕤ
 # miso
 
-`miso` is an experiment in agent-based coding that tackles a common problem with vibe-coded projects - maintainability.
+`miso` ("**m**ake **i**t **so**") is an experiment in agent-based coding that tackles a common problem with vibe-coded projects - maintainability.
 
 In conventional vibe-coding workflows, a conversation between a user and agent results in some running code, and the conversation is then thrown away. This later makes it harder for a user to modify the code at a fine level of detail, because it's harder to isolate the precise part of the code that's relevant.
 
