@@ -3,7 +3,7 @@
 
 `miso` is an experiment in agent-based coding that tackles a common problem with vibe-coded projects - maintainability.
 
-In conventional vibe-coding workflows, a conversation between a user and agent results in some running code, and the conversation is then thrown away. This later makes it harder for a user to modify the code at a fine level of detail, because it's harder to isolate the precise part of the code.
+In conventional vibe-coding workflows, a conversation between a user and agent results in some running code, and the conversation is then thrown away. This later makes it harder for a user to modify the code at a fine level of detail, because it's harder to isolate the precise part of the code that's relevant.
 
 `miso` introduces the concept of *feature-modular specification* - a tree of short markdown documents called *snippets*, that document the system from the topmost level (its purpose) down to the finest level of detail. Each snippet adds detail to its parent, while remaining short enough (100-300 words) to be read quickly by users, and to fit easily into LLM contexts.
 
