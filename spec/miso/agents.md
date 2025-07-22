@@ -1,9 +1,9 @@
 # agents
 *how user-agent conversation should work*
 
-The purpose of the workflow is to help the user understand and modify a running application, without having to know or understand its code. 
+The purpose of the agent workflow is to help the user understand and modify a running application, without having to know or understand its code. 
 
-The typical workflow will look like this:
+The typical workflow will look something like:
 
 - user uses application (agent is able to monitor what user sees, and any console output from the browser, as well as debug information on the server)
 - when the user encounters a problem or has an idea for a modification, they converse with the agent
