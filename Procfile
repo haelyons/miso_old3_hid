@@ -1,0 +1,1 @@
+web: python spec/miso/.editor/code/app.py
