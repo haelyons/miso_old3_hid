@@ -2,7 +2,7 @@
 
 *special page that shows recently updated features*
 
-When we request the `/~recent` URL (eg. localhost:5000/~recent), we should see a list of recently updated feature snippets. Each item should be in child-view format (i.e. title/summary both on one line), with the date of edit visible. Clicking on the item should go to the feature snippet URL.
+When we request the `/~recent` URL (eg. localhost:5000/~recent), we should see a list of recently updated feature snippets. Each item uses standard child-view format with title and timestamp on same line, summary below. No page title - breadcrumbs provide context. Clicking on the item should go to the feature snippet URL.
 
 The changes list should only include actual feature specification files, not implementation files from metafolders (directories starting with dots like `.breadcrumbs/`, `.changes/`, etc). This keeps the page focused on user-visible features rather than development artifacts.
 

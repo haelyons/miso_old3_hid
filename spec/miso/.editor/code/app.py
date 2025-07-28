@@ -72,11 +72,19 @@ class SnippetLoader:
                 child_summary_match = re.search(r'\*(.+?)\*', child_content)
                 child_summary = child_summary_match.group(1) if child_summary_match else ""
                 
+                # Get modification time
+                mod_time = os.path.getmtime(child_file)
+                
                 children.append({
                     'title': child_title,
                     'summary': child_summary,
-                    'path': str(child_file.relative_to(self.spec_root))
+                    'path': str(child_file.relative_to(self.spec_root)),
+                    'modified': mod_time,
+                    'modified_readable': format_date(mod_time)
                 })
+            
+            # Sort children by modification time (newest first)
+            children.sort(key=lambda x: x['modified'], reverse=True)
         
         return {
             'title': title,

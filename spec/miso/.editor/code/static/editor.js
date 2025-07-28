@@ -154,13 +154,15 @@ class SnippetEditor {
         
         const changesHtml = changes.map(change => `
             <div class="child-item" onclick="editor.navigateToPath('${change.path}')">
-                <div class="child-item-title">${change.title}</div>
-                <div class="child-item-summary">${change.summary} • ${change.modified_readable}</div>
+                <div class="child-item-header">
+                    <div class="child-item-title">${change.title}</div>
+                    <div class="child-item-time">${change.modified_readable}</div>
+                </div>
+                <div class="child-item-summary">${change.summary}</div>
             </div>
         `).join('');
         
         this.contentView.innerHTML = breadcrumbsHtml + `
-            <h1>recent changes</h1>
             <div class="child-view-inline">
                 ${changesHtml}
             </div>
@@ -217,7 +219,10 @@ class SnippetEditor {
         // Render children inline within content view
         const childrenHtml = this.currentSnippet.children.map(child => `
             <div class="child-item" onclick="editor.navigateToChild('${child.path}')">
-                <div class="child-item-title">${child.title}</div>
+                <div class="child-item-header">
+                    <div class="child-item-title">${child.title}</div>
+                    <div class="child-item-time">${child.modified_readable}</div>
+                </div>
                 <div class="child-item-summary">${child.summary}</div>
             </div>
         `).join('');
