@@ -356,6 +356,9 @@ class SnippetEditor {
         // Store original content for cancellation
         this.originalContent = this.currentSnippet.content;
         
+        // Parse the markdown content into sections
+        this.parseContentSections();
+        
         // Update buttons first - replace inline edit button with save/cancel
         const editButton = document.querySelector('.inline-edit-btn');
         if (editButton) {
@@ -367,17 +370,77 @@ class SnippetEditor {
             `;
         }
         
-        // Replace rendered content with WYSIWYG editor
-        const renderedContent = document.querySelector('.rendered-content');
-        renderedContent.innerHTML = '';
+        // Make sections editable in-place
+        this.makeContentEditable();
+    }
+
+    parseContentSections() {
+        // Extract title, summary and main content from markdown
+        const content = this.originalContent;
         
-        this.wysiwygEditor = new WYSIWYGEditor(renderedContent, this.originalContent);
+        // Extract title (first # header)
+        const titleMatch = content.match(/^# (.+)$/m);
+        this.editableTitle = titleMatch ? titleMatch[1] : 'Untitled';
+        
+        // Extract summary (first *emphasized* text after title)
+        const summaryMatch = content.match(/\*(.+?)\*/);
+        this.editableSummary = summaryMatch ? summaryMatch[1] : '';
+        
+        // Extract main content (everything after summary)
+        let mainContent = content;
+        if (titleMatch) {
+            mainContent = mainContent.replace(titleMatch[0], '');
+        }
+        if (summaryMatch) {
+            mainContent = mainContent.replace(summaryMatch[0], '');
+        }
+        this.editableMainContent = mainContent.trim();
+    }
+
+    makeContentEditable() {
+        // Make title editable
+        const titleElement = document.querySelector('.content-header h1');
+        if (titleElement) {
+            titleElement.contentEditable = true;
+            titleElement.classList.add('editing');
+            titleElement.textContent = this.editableTitle;
+        }
+        
+        
+        // Replace rendered content with editable sections
+        const renderedContent = document.querySelector('.rendered-content');
+        if (renderedContent) {
+            // Create summary element
+            const summaryDiv = document.createElement('em');
+            summaryDiv.contentEditable = true;
+            summaryDiv.classList.add('editing');
+            summaryDiv.textContent = this.editableSummary;
+            
+            // Create editable div for main content
+            const mainContentDiv = document.createElement('div');
+            mainContentDiv.contentEditable = true;
+            mainContentDiv.classList.add('editing', 'main-content-editor');
+            mainContentDiv.innerHTML = marked.parse(this.editableMainContent);
+            
+            // Replace all content with just summary and main content
+            renderedContent.innerHTML = '';
+            renderedContent.appendChild(summaryDiv);
+            renderedContent.appendChild(mainContentDiv);
+        }
     }
 
     async saveContentChanges() {
-        const newContent = this.wysiwygEditor ? 
-            this.wysiwygEditor.getMarkdown() : 
-            document.querySelector('.content-textarea')?.value || '';
+        // Collect edited content from in-place editors
+        const titleElement = document.querySelector('.content-header h1.editing');
+        const summaryElement = document.querySelector('.rendered-content em.editing');
+        const mainContentElement = document.querySelector('.main-content-editor');
+        
+        const newTitle = titleElement ? titleElement.textContent.trim() : this.editableTitle;
+        const newSummary = summaryElement ? summaryElement.textContent.trim() : this.editableSummary;
+        const newMainContent = mainContentElement ? this.htmlToMarkdown(mainContentElement.innerHTML) : this.editableMainContent;
+        
+        // Reconstruct markdown
+        let newContent = `# ${newTitle}\n*${newSummary}*\n\n${newMainContent}`;
         
         if (!newContent.trim()) return;
         
@@ -404,18 +467,102 @@ class SnippetEditor {
         }
     }
 
+    htmlToMarkdown(html) {
+        // Create a temporary div to parse HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        // Process the HTML nodes recursively
+        let markdown = this.processNode(tempDiv);
+        
+        // Clean up spacing - ensure only single blank lines between paragraphs
+        markdown = markdown
+            .replace(/\n\s*\n\s*\n/g, '\n\n')  // Multiple blank lines -> single blank line
+            .replace(/\n\n+/g, '\n\n')         // Multiple consecutive blank lines -> single blank line
+            .trim();
+            
+        return markdown;
+    }
+    
+    processNode(node) {
+        let result = '';
+        
+        for (let child of node.childNodes) {
+            if (child.nodeType === Node.TEXT_NODE) {
+                // Text node - just add the text
+                result += child.textContent;
+            } else if (child.nodeType === Node.ELEMENT_NODE) {
+                // Element node - convert based on tag type
+                const tagName = child.tagName.toLowerCase();
+                const childContent = this.processNode(child);
+                
+                switch (tagName) {
+                    case 'p':
+                        result += childContent + '\n';
+                        break;
+                    case 'br':
+                        result += '\n';
+                        break;
+                    case 'strong':
+                    case 'b':
+                        result += `**${childContent}**`;
+                        break;
+                    case 'em':
+                    case 'i':
+                        result += `*${childContent}*`;
+                        break;
+                    case 'code':
+                        result += `\`${childContent}\``;
+                        break;
+                    case 'h1':
+                        result += `# ${childContent}\n`;
+                        break;
+                    case 'h2':
+                        result += `## ${childContent}\n`;
+                        break;
+                    case 'h3':
+                        result += `### ${childContent}\n`;
+                        break;
+                    case 'h4':
+                        result += `#### ${childContent}\n`;
+                        break;
+                    case 'ul':
+                        result += childContent + '\n';
+                        break;
+                    case 'ol':
+                        result += childContent + '\n';
+                        break;
+                    case 'li':
+                        result += `- ${childContent}\n`;
+                        break;
+                    case 'blockquote':
+                        result += `> ${childContent}\n`;
+                        break;
+                    case 'div':
+                        result += childContent + '\n';
+                        break;
+                    default:
+                        // For unknown tags, just include the content
+                        result += childContent;
+                        break;
+                }
+            }
+        }
+        
+        return result;
+    }
+
     cancelContentEditing() {
         this.exitContentEditing();
         this.renderContent(this.currentSnippet);
     }
 
     exitContentEditing() {
-        if (this.wysiwygEditor) {
-            this.wysiwygEditor.cleanup();
-            this.wysiwygEditor = null;
-        }
         this.isEditingContent = false;
         this.originalContent = '';
+        this.editableTitle = '';
+        this.editableSummary = '';
+        this.editableMainContent = '';
     }
     
     buildBreadcrumbTrail(currentPath) {

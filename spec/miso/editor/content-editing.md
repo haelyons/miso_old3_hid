@@ -7,13 +7,10 @@ The content editing feature allows users to edit the actual markdown content of 
 An "Edit" button appears at the right edge of the content view, positioned to the right of the snippet title. The button is subtly styled to be discoverable but not intrusive to the reading experience.
 
 **Edit Mode Toggle:**
-When clicked, the edit button transforms the rendered markdown content into a textarea containing the raw markdown source. The button text changes to "Save" and "Cancel" options appear.
-
-**Content Editing Experience:**
-In edit mode, the content view displays a large textarea with the snippet's markdown source. The textarea maintains appropriate sizing, font styling, and provides a comfortable editing experience with monospace font for code clarity.
+When clicked, the edit button makes the snippet title, summary and content fields editable (using standard browser editing features).
 
 **Save and Cancel Actions:**
-Save writes the modified content back to the .md file and returns to view mode with updated rendered content. Cancel discards changes and returns to view mode without modifications, preserving the original content.
+Save writes the modified content back to the .md file (ensuring that formatting is translated correctly from HTML to markdown) and returns to view mode with updated rendered content. Cancel discards changes and returns to view mode without modifications, preserving the original content.
 
 **Real-time Integration:**
 The editing experience integrates seamlessly with the existing navigation and add-subfeature functionality, ensuring users can edit content while maintaining full workflow capabilities.
