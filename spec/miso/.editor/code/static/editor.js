@@ -108,7 +108,6 @@ class SnippetEditor {
             this.currentSnippet = snippet;
             
             this.renderContent(snippet);
-            this.renderChildren(snippet);
             
             // Update URL and page title
             if (updateURL) {
@@ -215,22 +214,28 @@ class SnippetEditor {
                 ${editButton}
             </div>`;
         
-        this.contentView.innerHTML = breadcrumbsHtml + contentHeader + `<div class="rendered-content">${contentWithoutTitle}</div>`;
-    }
-    
-    renderChildren(snippet) {
-        const childrenHtml = snippet.children.map(child => `
+        // Render children inline within content view
+        const childrenHtml = this.currentSnippet.children.map(child => `
             <div class="child-item" onclick="editor.navigateToChild('${child.path}')">
                 <div class="child-item-title">${child.title}</div>
                 <div class="child-item-summary">${child.summary}</div>
             </div>
         `).join('');
         
-        const title = snippet.children.length > 0 ? 
-            `<h3>children (${snippet.children.length}) <button class="add-child-btn" onclick="editor.startChildCreation()">+</button></h3>` : 
+        const childrenTitle = this.currentSnippet.children.length > 0 ? 
+            `<h3>children (${this.currentSnippet.children.length}) <button class="add-child-btn" onclick="editor.startChildCreation()">+</button></h3>` : 
             '<h3>no children <button class="add-child-btn" onclick="editor.startChildCreation()">+</button></h3>';
         
-        this.childView.innerHTML = title + childrenHtml;
+        const childrenSection = `<div class="child-view-inline">${childrenTitle}${childrenHtml}</div>`;
+        
+        this.contentView.innerHTML = breadcrumbsHtml + contentHeader + `<div class="rendered-content">${contentWithoutTitle}</div>` + childrenSection;
+        
+        // Clear the separate child view
+        this.childView.innerHTML = '';
+    }
+    
+    renderChildren(snippet) {
+        // This method is no longer used since children are rendered inline
     }
     
     navigateToChild(path) {
@@ -248,8 +253,8 @@ class SnippetEditor {
             <input type="text" id="new-child-summary" placeholder="Enter summary..." />
         `;
         
-        // Insert at the beginning of child view (after the h3 title)
-        const childView = document.getElementById('child-view');
+        // Insert at the beginning of inline child view (after the h3 title)
+        const childView = document.querySelector('.child-view-inline');
         const titleElement = childView.querySelector('h3');
         titleElement.insertAdjacentElement('afterend', editingChild);
         
