@@ -38,8 +38,8 @@ When implementing user requests, follow this five-level abstraction approach:
 
 **Current Implementation Status:**
 
-✅ **Editor Feature**: Complete Flask/JavaScript web editor with two-column interface
-- Run: `./editor.sh` (auto-kills existing processes on port 5000)
+✅ **Editor Feature**: Complete Flask/JavaScript web editor with single-column interface
+- Run: `./editor.sh` (auto-kills existing processes on port 5000, opens in new terminal)
 - URL: http://localhost:5000
 - Files: `spec/miso/.editor/code/` (Flask app, HTML, CSS, JS)
 
@@ -56,7 +56,34 @@ When implementing user requests, follow this five-level abstraction approach:
 - Test commands: `npm test` (system-wide), `npx jest path/to/feature.test.js` (feature-specific)
 - Working tests: Breadcrumbs feature fully tested with 12 passing tests
 
-## Recent Session Summary (2025-07-22 Part 2)
+## Recent Session Summary (2025-07-28)
+
+**Editor Layout Modernization:**
+1. **Single-Column Layout** - Replaced two-column side-by-side with vertical single-column design
+   - Content view displays at top with full width
+   - Children view appears below content when scrolling down
+   - Removed splitter and resize functionality for simpler UX
+   - Mobile behavior simplified: children always visible below content
+   
+2. **Horizontal Child Items** - Optimized child item layout for space efficiency
+   - Title and summary now display on same horizontal line
+   - Title on left (blue, bold), summary on right (gray, italic)
+   - More compact vertical spacing allows more children to be visible
+   - Responsive flexbox layout prevents overflow
+
+**Implementation Details:**
+- HTML: Removed splitter div, maintained content/child structure
+- CSS: Changed to `flex-direction: column`, updated child items to `display: flex`
+- JavaScript: Removed resize handlers and mobile overlay functionality
+- Updated `editor.sh` to open server in new terminal window
+
+**Specifications Created:**
+- `spec/miso/editor/single-column.md` - Single-column layout specification
+- `spec/miso/editor/.single-column/` - Complete 5-level workflow documentation
+- `spec/miso/editor/horizontal-children.md` - Horizontal child item specification  
+- `spec/miso/editor/.horizontal-children/` - Complete 5-level workflow documentation
+
+## Previous Session Summary (2025-07-22 Part 2)
 
 **Testing System Development:**
 1. **Comprehensive Testing Workflow** - Implemented complete TDD-inspired testing system

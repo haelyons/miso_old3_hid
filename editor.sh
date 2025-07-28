@@ -20,5 +20,5 @@ echo "📂 Running from miso root directory for correct spec/ path resolution"
 echo "🌐 Editor will be available at: http://localhost:5000"
 echo ""
 
-# Start Flask server from miso root directory
-python3 spec/miso/.editor/code/app.py
+# Start Flask server from miso root directory in a new terminal
+osascript -e "tell app \"Terminal\" to do script \"cd '$(pwd)' && python3 spec/miso/.editor/code/app.py\""

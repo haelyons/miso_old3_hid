@@ -1,10 +1,10 @@
 # editor
 *web-based viewer/editor of the snippet tree*
 
-`miso`'s web-based editor allows the user to navigate, view and edit snippets. It has two resizable columns:
+`miso`'s web-based editor allows the user to navigate, view and edit snippets. It uses a single-column layout:
 
-- the content view, which shows a single snippet as rendered markdown
-- the child view, which shows each child snippet as a title and one-line summary
+- the content view shows a single snippet as rendered markdown at the top
+- the child view appears below the content, showing each child snippet as a title and one-line summary
 
-For mobile users, the main screen should show only the content view, and swiping left from the right-hand edge of the screen should bring in the child view; swiping right from the left-hand edge of the screen should navigate up to the parent.
+For mobile users, swiping right from the left-hand edge of the screen navigates up to the parent. The children remain visible below the content when scrolling down.
 

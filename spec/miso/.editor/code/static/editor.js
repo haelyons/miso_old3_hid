@@ -3,7 +3,6 @@ class SnippetEditor {
         this.currentPath = "miso.md";
         this.contentView = document.getElementById('content-view');
         this.childView = document.getElementById('child-view');
-        this.splitter = document.getElementById('splitter');
         this.mobileOverlay = document.getElementById('mobile-overlay');
         this.isMobile = window.innerWidth <= 768;
         
@@ -14,10 +13,6 @@ class SnippetEditor {
         // Load initial snippet
         this.loadSnippet("miso.md");
         
-        // Setup resize handlers
-        if (!this.isMobile) {
-            this.setupResizeHandlers();
-        }
         
         // Setup mobile handlers
         if (this.isMobile) {
@@ -81,9 +76,6 @@ class SnippetEditor {
     
     navigateToChild(path) {
         this.loadSnippet(path);
-        if (this.isMobile) {
-            this.hideChildView();
-        }
     }
     
     buildBreadcrumbTrail(currentPath) {
@@ -156,10 +148,6 @@ class SnippetEditor {
                 e.preventDefault();
                 const path = e.target.dataset.path;
                 this.loadSnippet(path);
-                
-                if (this.isMobile) {
-                    this.hideChildView();
-                }
             }
         });
     }
@@ -175,10 +163,6 @@ class SnippetEditor {
         } else {
             // Already at root, stay at root
             this.loadSnippet("miso.md");
-        }
-        
-        if (this.isMobile) {
-            this.hideChildView();
         }
     }
     
@@ -203,44 +187,21 @@ class SnippetEditor {
             // Only process horizontal swipes
             if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > swipeThreshold) {
                 
-                // Left swipe from right edge - show child view
-                if (deltaX < -swipeThreshold && touchStartX > window.innerWidth - edgeThreshold) {
-                    this.showChildView();
-                }
-                
                 // Right swipe from left edge - navigate to parent
-                else if (deltaX > swipeThreshold && touchStartX < edgeThreshold) {
+                if (deltaX > swipeThreshold && touchStartX < edgeThreshold) {
                     this.navigateUp();
-                }
-                
-                // Right swipe when child view is visible - hide it
-                else if (deltaX > swipeThreshold && this.childView.classList.contains('visible')) {
-                    this.hideChildView();
                 }
             }
         });
         
-        // Close child view when overlay is tapped
-        this.mobileOverlay.addEventListener('click', () => {
-            this.hideChildView();
-        });
     }
     
-    showChildView() {
-        this.childView.classList.add('visible');
-        this.mobileOverlay.classList.add('visible');
-    }
-    
-    hideChildView() {
-        this.childView.classList.remove('visible');
-        this.mobileOverlay.classList.remove('visible');
-    }
     
     addSwipeHint() {
         // Show a temporary hint for mobile users
         const hint = document.createElement('div');
         hint.className = 'swipe-hint';
-        hint.textContent = 'Swipe from right edge to see children';
+        hint.textContent = 'Swipe from left edge to go back';
         document.body.appendChild(hint);
         
         setTimeout(() => {
@@ -248,37 +209,6 @@ class SnippetEditor {
         }, 4000);
     }
     
-    setupResizeHandlers() {
-        let isResizing = false;
-        let startX = 0;
-        let startWidth = 0;
-        
-        this.splitter.addEventListener('mousedown', (e) => {
-            isResizing = true;
-            startX = e.clientX;
-            startWidth = parseInt(document.defaultView.getComputedStyle(this.childView).width, 10);
-            document.addEventListener('mousemove', resize);
-            document.addEventListener('mouseup', stopResize);
-            document.body.style.cursor = 'col-resize';
-            e.preventDefault();
-        });
-        
-        const resize = (e) => {
-            if (!isResizing) return;
-            const newWidth = startWidth - (e.clientX - startX);
-            const minWidth = 200;
-            const maxWidth = window.innerWidth - 300; // Leave space for content
-            const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
-            this.childView.style.width = clampedWidth + 'px';
-        };
-        
-        const stopResize = () => {
-            isResizing = false;
-            document.body.style.cursor = '';
-            document.removeEventListener('mousemove', resize);
-            document.removeEventListener('mouseup', stopResize);
-        };
-    }
 }
 
 // Initialize editor when page loads
