@@ -202,17 +202,28 @@ class SnippetEditor {
     }
     
     async renderContent(snippet) {
-        let html = marked.parse(snippet.content);
-        
         // Build and render breadcrumbs
         const segments = this.buildBreadcrumbTrail(this.currentPath);
         const titledSegments = await this.fetchBreadcrumbTitles(segments);
         const breadcrumbsHtml = this.renderBreadcrumbs(titledSegments);
         
-        // Extract title and content separately
-        const titleMatch = html.match(/<h1>([^<]+)<\/h1>/);
+        // Extract title, summary, and main content from markdown before parsing
+        const content = snippet.content;
+        const titleMatch = content.match(/^# (.+)$/m);
         const title = titleMatch ? titleMatch[1] : 'Untitled';
-        const contentWithoutTitle = html.replace(/<h1>([^<]+)<\/h1>/, '');
+        
+        const summaryMatch = content.match(/\*(.+?)\*/);
+        const summaryText = summaryMatch ? summaryMatch[1] : '';
+        
+        // Get main content (everything after title and summary)
+        let mainContent = content;
+        if (titleMatch) {
+            mainContent = mainContent.replace(titleMatch[0], '');
+        }
+        if (summaryMatch) {
+            mainContent = mainContent.replace(summaryMatch[0], '');
+        }
+        mainContent = mainContent.trim();
         
         // Create content header with properly aligned edit button
         const editButton = `<button class="edit-btn inline-edit-btn" onclick="editor.startContentEditing()">Edit</button>`;
@@ -221,6 +232,10 @@ class SnippetEditor {
                 <h1>${title}</h1>
                 ${editButton}
             </div>`;
+        
+        // Render summary with special class and main content separately
+        const summaryHtml = summaryText ? `<em class="content-summary">${summaryText}</em>` : '';
+        const mainContentHtml = marked.parse(mainContent);
         
         // Render children inline within content view
         const childrenHtml = this.currentSnippet.children.map(child => `
@@ -239,7 +254,7 @@ class SnippetEditor {
         
         const childrenSection = `<div class="child-view-inline">${childrenTitle}${childrenHtml}</div>`;
         
-        this.contentView.innerHTML = breadcrumbsHtml + contentHeader + `<div class="rendered-content">${contentWithoutTitle}</div>` + childrenSection;
+        this.contentView.innerHTML = breadcrumbsHtml + contentHeader + `<div class="rendered-content">${summaryHtml}${mainContentHtml}</div>` + childrenSection;
         
         // Clear the separate child view
         this.childView.innerHTML = '';

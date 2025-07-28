@@ -11,3 +11,4 @@
 - Paragraph spacing uses single blank lines (not double) in generated markdown
 - All HTML tags and attributes are properly converted to clean markdown syntax
 - Formatting changes made during editing are correctly reflected in saved markdown files
+- Visual separator appears only below summary line, not inline italics within content

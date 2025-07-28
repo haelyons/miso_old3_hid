@@ -58,13 +58,18 @@ html, body {
     margin-bottom: 1rem;
 }
 
-.content-view em {
+.content-summary {
     color: #586069;
     font-style: italic;
     display: block;
     padding-bottom: 12px;
     border-bottom: 1px solid #e1e4e8;
     margin-bottom: 20px;
+}
+
+.content-view em {
+    color: #586069;
+    font-style: italic;
 }
 
 .content-view pre,
