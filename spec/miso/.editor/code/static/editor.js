@@ -148,7 +148,10 @@ class SnippetEditor {
     }
     
     renderChangesPage(changes) {
-        const breadcrumbsHtml = '<nav class="breadcrumbs"><div class="breadcrumb-trail"><span class="breadcrumb-current">recent changes</span></div></nav>';
+        const breadcrumbsHtml = `<nav class="breadcrumbs">
+            <div class="breadcrumb-trail"><span class="breadcrumb-current">recent changes</span></div>
+            <a href="#" class="recent-link root-link">root</a>
+        </nav>`;
         
         const changesHtml = changes.map(change => `
             <div class="child-item" onclick="editor.navigateToPath('${change.path}')">
@@ -163,6 +166,16 @@ class SnippetEditor {
                 ${changesHtml}
             </div>
         `;
+        
+        // Set up root link handler
+        const rootLink = this.contentView.querySelector('.root-link');
+        if (rootLink) {
+            rootLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.loadSnippet('miso.md');
+            });
+        }
         
         // Clear child view since we're showing changes in content
         this.childView.innerHTML = '';
