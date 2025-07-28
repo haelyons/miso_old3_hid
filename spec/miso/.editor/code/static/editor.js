@@ -114,8 +114,11 @@ class SnippetEditor {
                 URLManager.updateURL(path, snippet.title);
             }
             
-            // Scroll to top of page
+            // Scroll to top immediately and after render to ensure it works
             window.scrollTo(0, 0);
+            setTimeout(() => {
+                window.scrollTo(0, 0);
+            }, 10);
             
         } catch (error) {
             console.error('Error loading snippet:', error);
@@ -136,8 +139,11 @@ class SnippetEditor {
             // Update page title
             document.title = 'miso';
             
-            // Scroll to top of page
+            // Scroll to top immediately and after render to ensure it works
             window.scrollTo(0, 0);
+            setTimeout(() => {
+                window.scrollTo(0, 0);
+            }, 10);
             
         } catch (error) {
             console.error('Failed to load changes:', error);
@@ -186,9 +192,9 @@ class SnippetEditor {
     }
     
     navigateToPath(path) {
-        // Convert spec path to snippet path and navigate
-        const snippetPath = path;
-        this.loadSnippet(snippetPath);
+        // Use actual browser navigation for natural scroll-to-top behavior
+        const url = URLManager.snippetPathToUrl(path);
+        window.location.href = url;
     }
     
     navigateToRecent() {
@@ -244,7 +250,9 @@ class SnippetEditor {
     }
     
     navigateToChild(path) {
-        this.loadSnippet(path); // This will update URL automatically
+        // Use actual browser navigation for natural scroll-to-top behavior
+        const url = URLManager.snippetPathToUrl(path);
+        window.location.href = url;
     }
 
     startChildCreation() {
@@ -486,7 +494,8 @@ class SnippetEditor {
             if (e.target.classList.contains('breadcrumb-link')) {
                 e.preventDefault();
                 const path = e.target.dataset.path;
-                this.loadSnippet(path); // This will update URL automatically
+                const url = URLManager.snippetPathToUrl(path);
+                window.location.href = url;
             }
         });
     }
@@ -498,10 +507,11 @@ class SnippetEditor {
             // Remove the filename to get parent directory
             pathParts.pop();
             const parentPath = pathParts.join('/') + '.md';
-            this.loadSnippet(parentPath);
+            const url = URLManager.snippetPathToUrl(parentPath);
+            window.location.href = url;
         } else {
             // Already at root, stay at root
-            this.loadSnippet("miso.md");
+            window.location.href = '/miso';
         }
     }
     
