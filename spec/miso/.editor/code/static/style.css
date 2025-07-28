@@ -91,7 +91,7 @@ html, body {
     font-size: 1.2rem;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 8px;
 }
 
 .add-child-btn {
@@ -108,7 +108,6 @@ html, body {
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s;
-    margin-left: auto;
 }
 
 .add-child-btn:hover {
@@ -426,4 +425,14 @@ html, body {
 .child-view-inline .child-item {
     background: white;
     margin-bottom: 10px;
+}
+
+.child-view-inline h3 {
+    color: #24292e;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
 }

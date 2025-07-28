@@ -1,5 +1,4 @@
 # miso
-
 *an experimental system for writing code using hierarchical specifications*
 
 `miso` is a sytem to allow laypersons to write code with the help of agents, while creating systems that are robust, understandable and maintainable.
