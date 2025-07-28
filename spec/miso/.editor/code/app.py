@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, send_from_directory
+from flask import Flask, jsonify, render_template, send_from_directory, request
 import os
 import markdown
 import re
@@ -89,7 +89,9 @@ class SnippetLoader:
 loader = SnippetLoader()
 
 @app.route('/')
-def index():
+@app.route('/<path:snippet_path>')
+def index(snippet_path=""):
+    # Serve the same HTML but let JavaScript handle routing
     return render_template('index.html')
 
 @app.route('/api/snippet')
@@ -103,6 +105,75 @@ def get_snippet(snippet_path=""):
 @app.route('/static/<path:filename>')
 def static_files(filename):
     return send_from_directory('static', filename)
+
+@app.route('/api/create-snippet', methods=['POST'])
+def create_snippet():
+    """Create a new snippet file"""
+    data = request.get_json()
+    parent_path = data['parent_path']
+    filename = data['filename']
+    title = data['title']
+    summary = data['summary']
+    
+    # Determine target directory
+    if parent_path == "miso.md":
+        target_dir = Path("spec/miso")
+    else:
+        # Remove .md extension and use parent path to determine directory
+        parent_without_ext = Path(parent_path).stem
+        parent_dir = Path(parent_path).parent
+        if str(parent_dir) == ".":
+            target_dir = Path("spec") / parent_without_ext
+        else:
+            target_dir = Path("spec") / parent_dir / parent_without_ext
+    
+    target_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Create new file
+    new_file_path = target_dir / f"{filename}.md"
+    content = f"# {title}\n*{summary}*\n\n"
+    
+    with open(new_file_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    
+    return jsonify({'path': str(new_file_path.relative_to("spec"))})
+
+@app.route('/api/update-snippet', methods=['POST'])
+def update_snippet():
+    """Update snippet content"""
+    data = request.get_json()
+    snippet_path = data['path']
+    new_content = data['content']
+    
+    full_path = Path("spec") / snippet_path
+    
+    if not full_path.exists():
+        return jsonify({'error': 'Snippet not found'}), 404
+    
+    try:
+        with open(full_path, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/debug-log', methods=['POST'])
+def debug_log():
+    """Log debug messages from the client"""
+    data = request.get_json()
+    message = data.get('message', '')
+    timestamp = data.get('timestamp', '')
+    
+    # Print to console for immediate feedback
+    print(f"[{timestamp}] {message}")
+    
+    # Also write to file
+    log_file = Path("debug.log")
+    with open(log_file, 'a', encoding='utf-8') as f:
+        f.write(f"[{timestamp}] {message}\n")
+    
+    return jsonify({'success': True})
 
 # Observability endpoints
 @app.route('/api/monitor/screenshot')

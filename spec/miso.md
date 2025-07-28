@@ -5,5 +5,4 @@
 
 `miso` introduces the concept of *feature-modular specification* - a tree of markdown files called *snippets*. Each snippet is a short (250-300 word) summary of a feature, and has up to six child snippets that add detail to the summary.
 
-The user converses with the agent to understand and modify the feature tree, and from this generate working code.
-
+The user "writes code" by editing the specification; the agent works in the background to "make it so".

@@ -27,10 +27,14 @@ class BrowserMonitor:
     
     async def launch_browser(self, headless=False):
         """Launch browser and navigate to Flask editor"""
-        playwright = await async_playwright().start()
-        self.browser = await playwright.chromium.launch(headless=headless)
+        self.playwright = await async_playwright().start()
+        self.browser = await self.playwright.chromium.launch(
+            headless=headless,
+            args=['--no-sandbox', '--disable-web-security']  # More stable browser launch
+        )
         self.context = await self.browser.new_context(
-            viewport={"width": 1200, "height": 800}
+            viewport={"width": 1200, "height": 800},
+            ignore_https_errors=True
         )
         
         self.page = await self.context.new_page()
@@ -39,13 +43,16 @@ class BrowserMonitor:
         self.page.on("console", self._handle_console)
         self.page.on("request", self._handle_request)
         self.page.on("response", self._handle_response)
-        self.page.on("click", self._handle_click)
         
-        # Navigate to Flask app
-        await self.page.goto(self.flask_url)
-        await self.page.wait_for_load_state("networkidle")
+        try:
+            # Navigate to Flask app with timeout
+            await self.page.goto(self.flask_url, timeout=10000)
+            await self.page.wait_for_load_state("networkidle", timeout=10000)
+            print(f"✅ Browser launched and navigated to {self.flask_url}")
+        except Exception as e:
+            print(f"⚠️  Navigation warning: {e}")
+            print(f"Browser still available at {self.flask_url}")
         
-        print(f"Browser launched and navigated to {self.flask_url}")
         return self.page
     
     async def take_screenshot(self, name=None):
@@ -164,8 +171,17 @@ class BrowserMonitor:
     async def cleanup(self):
         """Clean up browser resources"""
         self.monitoring = False
-        if self.browser:
-            await self.browser.close()
+        try:
+            if self.page:
+                await self.page.close()
+            if self.context:
+                await self.context.close()
+            if self.browser:
+                await self.browser.close()
+            if hasattr(self, 'playwright') and self.playwright:
+                await self.playwright.stop()
+        except Exception as e:
+            print(f"Cleanup warning: {e}")
         print("Browser monitor cleaned up")
 
 async def main():

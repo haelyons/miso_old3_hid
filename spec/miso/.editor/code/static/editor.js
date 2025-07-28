@@ -1,3 +1,35 @@
+class URLManager {
+    static urlToSnippetPath(url) {
+        const path = new URL(url, window.location.origin).pathname;
+        const cleanPath = path.replace(/^\/+|\/+$/g, ''); // Remove leading/trailing slashes
+        
+        if (!cleanPath) {
+            // Auto-redirect root to /miso
+            return null; // Signal that we need to redirect
+        }
+        
+        if (cleanPath === 'miso') {
+            return 'miso.md';
+        }
+        
+        return cleanPath + '.md';
+    }
+    
+    static snippetPathToUrl(snippetPath) {
+        const pathWithoutExt = snippetPath.replace(/\.md$/, '');
+        
+        return '/' + pathWithoutExt;
+    }
+    
+    static updateURL(snippetPath, title) {
+        const url = URLManager.snippetPathToUrl(snippetPath);
+        const state = { snippetPath, title };
+        
+        window.history.pushState(state, title, url);
+        document.title = `${title} - miso`;
+    }
+}
+
 class SnippetEditor {
     constructor() {
         this.currentPath = "miso.md";
@@ -5,14 +37,20 @@ class SnippetEditor {
         this.childView = document.getElementById('child-view');
         this.mobileOverlay = document.getElementById('mobile-overlay');
         this.isMobile = window.innerWidth <= 768;
+        this.isEditing = false;
+        this.isEditingContent = false;
+        this.originalContent = '';
+        this.currentSnippet = null;
         
         this.init();
     }
     
     init() {
-        // Load initial snippet
-        this.loadSnippet("miso.md");
+        // Setup URL handling first
+        this.setupURLHandlers();
         
+        // Initialize from current URL
+        this.initializeFromURL();
         
         // Setup mobile handlers
         if (this.isMobile) {
@@ -28,8 +66,30 @@ class SnippetEditor {
             this.isMobile = window.innerWidth <= 768;
         });
     }
+
+    initializeFromURL() {
+        const snippetPath = URLManager.urlToSnippetPath(window.location.href);
+        
+        if (snippetPath === null) {
+            // Root URL detected, redirect to /miso
+            window.history.replaceState({ snippetPath: 'miso.md', title: 'miso' }, 'miso', '/miso');
+            this.loadSnippet('miso.md', false);
+        } else {
+            this.loadSnippet(snippetPath, false); // false = don't update URL
+        }
+    }
     
-    async loadSnippet(path) {
+    setupURLHandlers() {
+        window.addEventListener('popstate', (event) => {
+            if (event.state && event.state.snippetPath) {
+                this.loadSnippet(event.state.snippetPath, false);
+            } else {
+                this.initializeFromURL();
+            }
+        });
+    }
+    
+    async loadSnippet(path, updateURL = true) {
         try {
             const response = await fetch(`/api/snippet/${path}`);
             if (!response.ok) {
@@ -38,9 +98,15 @@ class SnippetEditor {
             
             const snippet = await response.json();
             this.currentPath = path;
+            this.currentSnippet = snippet;
             
             this.renderContent(snippet);
             this.renderChildren(snippet);
+            
+            // Update URL and page title
+            if (updateURL) {
+                URLManager.updateURL(path, snippet.title);
+            }
             
         } catch (error) {
             console.error('Error loading snippet:', error);
@@ -49,14 +115,23 @@ class SnippetEditor {
     }
     
     async renderContent(snippet) {
-        const html = marked.parse(snippet.content);
+        let html = marked.parse(snippet.content);
         
         // Build and render breadcrumbs
         const segments = this.buildBreadcrumbTrail(this.currentPath);
         const titledSegments = await this.fetchBreadcrumbTitles(segments);
         const breadcrumbsHtml = this.renderBreadcrumbs(titledSegments);
         
-        this.contentView.innerHTML = breadcrumbsHtml + html;
+        // Extract title and content separately
+        const titleMatch = html.match(/<h1>([^<]+)<\/h1>/);
+        const title = titleMatch ? titleMatch[1] : 'Untitled';
+        const contentWithoutTitle = html.replace(/<h1>([^<]+)<\/h1>/, '');
+        
+        // Add edit button inline with title
+        const editButton = `<button class="edit-btn inline-edit-btn" onclick="editor.startContentEditing()">Edit</button>`;
+        const titleWithButton = `<h1>${title} ${editButton}</h1>`;
+        
+        this.contentView.innerHTML = breadcrumbsHtml + titleWithButton + `<div class="rendered-content">${contentWithoutTitle}</div>`;
     }
     
     renderChildren(snippet) {
@@ -68,14 +143,177 @@ class SnippetEditor {
         `).join('');
         
         const title = snippet.children.length > 0 ? 
-            `<h3>children (${snippet.children.length})</h3>` : 
-            '<h3>no children</h3>';
+            `<h3>children (${snippet.children.length}) <button class="add-child-btn" onclick="editor.startChildCreation()">+</button></h3>` : 
+            '<h3>no children <button class="add-child-btn" onclick="editor.startChildCreation()">+</button></h3>';
         
         this.childView.innerHTML = title + childrenHtml;
     }
     
     navigateToChild(path) {
-        this.loadSnippet(path);
+        this.loadSnippet(path); // This will update URL automatically
+    }
+
+    startChildCreation() {
+        if (this.isEditing) return;
+        this.isEditing = true;
+        
+        const editingChild = document.createElement('div');
+        editingChild.className = 'child-item editing-child';
+        editingChild.innerHTML = `
+            <input type="text" id="new-child-title" placeholder="Enter title..." />
+            <input type="text" id="new-child-summary" placeholder="Enter summary..." />
+        `;
+        
+        // Insert at the beginning of child view (after the h3 title)
+        const childView = document.getElementById('child-view');
+        const titleElement = childView.querySelector('h3');
+        titleElement.insertAdjacentElement('afterend', editingChild);
+        
+        this.setupEditHandlers();
+        document.getElementById('new-child-title').focus();
+    }
+
+    setupEditHandlers() {
+        const titleInput = document.getElementById('new-child-title');
+        const summaryInput = document.getElementById('new-child-summary');
+        
+        titleInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                summaryInput.focus();
+            } else if (e.key === 'Escape') {
+                this.cancelChildCreation();
+            }
+        });
+        
+        summaryInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                this.saveNewChild();
+            } else if (e.key === 'Escape') {
+                this.cancelChildCreation();
+            }
+        });
+        
+        // Global click handler for canceling (bound to this instance)
+        this.globalClickHandler = (e) => {
+            if (!e.target.closest('.editing-child') && !e.target.closest('.add-child-btn')) {
+                this.cancelChildCreation();
+            }
+        };
+        document.addEventListener('click', this.globalClickHandler);
+    }
+
+    async saveNewChild() {
+        const title = document.getElementById('new-child-title').value.trim();
+        const summary = document.getElementById('new-child-summary').value.trim();
+        
+        if (!title || !summary) return;
+        
+        const filename = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        
+        try {
+            const response = await fetch('/api/create-snippet', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    parent_path: this.currentPath,
+                    filename: filename,
+                    title: title,
+                    summary: summary
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                this.cancelChildCreation();
+                await this.loadSnippet(result.path);
+                // Automatically enter edit mode for the new snippet
+                setTimeout(() => this.startContentEditing(), 100);
+            }
+        } catch (error) {
+            console.error('Error creating snippet:', error);
+        }
+    }
+
+    cancelChildCreation() {
+        const editingChild = document.querySelector('.editing-child');
+        if (editingChild) {
+            editingChild.remove();
+        }
+        this.isEditing = false;
+        if (this.globalClickHandler) {
+            document.removeEventListener('click', this.globalClickHandler);
+            this.globalClickHandler = null;
+        }
+    }
+
+    startContentEditing() {
+        if (this.isEditingContent) return;
+        this.isEditingContent = true;
+        
+        // Store original content for cancellation
+        this.originalContent = this.currentSnippet.content;
+        
+        // Update buttons first - replace inline edit button with save/cancel
+        const editButton = document.querySelector('.inline-edit-btn');
+        if (editButton) {
+            editButton.outerHTML = `
+                <span class="edit-button-group">
+                    <button class="edit-btn save inline-edit-btn" onclick="editor.saveContentChanges()">Save</button>
+                    <button class="edit-btn cancel inline-edit-btn" onclick="editor.cancelContentEditing()">Cancel</button>
+                </span>
+            `;
+        }
+        
+        // Replace rendered content with WYSIWYG editor
+        const renderedContent = document.querySelector('.rendered-content');
+        renderedContent.innerHTML = '';
+        
+        this.wysiwygEditor = new WYSIWYGEditor(renderedContent, this.originalContent);
+    }
+
+    async saveContentChanges() {
+        const newContent = this.wysiwygEditor ? 
+            this.wysiwygEditor.getMarkdown() : 
+            document.querySelector('.content-textarea')?.value || '';
+        
+        if (!newContent.trim()) return;
+        
+        try {
+            const response = await fetch('/api/update-snippet', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    path: this.currentPath,
+                    content: newContent
+                })
+            });
+            
+            if (response.ok) {
+                // Update current snippet data
+                this.currentSnippet.content = newContent;
+                this.exitContentEditing();
+                
+                // Re-render with updated content
+                this.renderContent(this.currentSnippet);
+            }
+        } catch (error) {
+            console.error('Error saving content:', error);
+        }
+    }
+
+    cancelContentEditing() {
+        this.exitContentEditing();
+        this.renderContent(this.currentSnippet);
+    }
+
+    exitContentEditing() {
+        if (this.wysiwygEditor) {
+            this.wysiwygEditor.cleanup();
+            this.wysiwygEditor = null;
+        }
+        this.isEditingContent = false;
+        this.originalContent = '';
     }
     
     buildBreadcrumbTrail(currentPath) {
@@ -147,7 +385,7 @@ class SnippetEditor {
             if (e.target.classList.contains('breadcrumb-link')) {
                 e.preventDefault();
                 const path = e.target.dataset.path;
-                this.loadSnippet(path);
+                this.loadSnippet(path); // This will update URL automatically
             }
         });
     }
@@ -211,8 +449,378 @@ class SnippetEditor {
     
 }
 
+class WYSIWYGEditor {
+    constructor(container, initialContent) {
+        this.container = container;
+        this.popup = null;
+        this.currentSelection = null;
+        this.init(initialContent);
+    }
+
+    init(content) {
+        // Create contenteditable div
+        this.editor = document.createElement('div');
+        this.editor.className = 'wysiwyg-editor';
+        this.editor.contentEditable = true;
+        
+        // Handle blank file initialization
+        if (content.trim().match(/^# .+\n\*.*\*\s*$/)) {
+            // This is a new blank file - add blank line after summary and set cursor position
+            const lines = content.trim().split('\n');
+            if (lines.length === 2) {
+                content = content.trim() + '\n\n';
+            }
+        }
+        
+        this.editor.innerHTML = marked.parse(content);
+        
+        this.container.appendChild(this.editor);
+        this.setupEventHandlers();
+        
+        // Set cursor to end if blank file
+        if (content.trim().match(/^# .+\n\*.*\*\s*$/)) {
+            this.setCursorToEnd();
+        }
+    }
+
+    setCursorToEnd() {
+        const range = document.createRange();
+        const selection = window.getSelection();
+        range.selectNodeContents(this.editor);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+
+    setupEventHandlers() {
+        this.editor.addEventListener('mouseup', () => this.handleSelection());
+        this.editor.addEventListener('keyup', (e) => {
+            this.handleSelection();
+            this.handleKeyboardShortcuts(e);
+        });
+        this.editor.addEventListener('keydown', (e) => this.handleSpecialKeys(e));
+        this.editor.addEventListener('input', () => this.handleAutoFormatting());
+        
+        // Bind the click outside handler to this instance
+        this.clickOutsideHandler = (e) => this.handleClickOutside(e);
+        document.addEventListener('mousedown', this.clickOutsideHandler);
+    }
+
+    handleKeyboardShortcuts(e) {
+        if (e.key === '`' || e.key === '*') {
+            // Check if we just typed formatting shortcuts
+            setTimeout(() => this.checkFormatShortcuts(), 10);
+        }
+    }
+
+    handleSpecialKeys(e) {
+        if (e.key === 'Enter') {
+            setTimeout(() => this.handleEnterKey(), 10);
+        }
+    }
+
+    checkFormatShortcuts() {
+        const selection = window.getSelection();
+        if (selection.rangeCount === 0) return;
+        
+        const range = selection.getRangeAt(0);
+        const textNode = range.startContainer;
+        if (textNode.nodeType !== Node.TEXT_NODE) return;
+        
+        const text = textNode.textContent;
+        const cursorPos = range.startOffset;
+        
+        // Check for `text` (code)
+        const codeMatch = text.match(/(.*)(`[^`]*`)(.*)/);
+        if (codeMatch && cursorPos > codeMatch[1].length && cursorPos <= codeMatch[1].length + codeMatch[2].length) {
+            this.replaceWithFormat(textNode, codeMatch, 'code');
+            return;
+        }
+        
+        // Check for **text** (bold)
+        const boldMatch = text.match(/(.*?)(\*\*[^*]*\*\*)(.*)/);
+        if (boldMatch && cursorPos > boldMatch[1].length && cursorPos <= boldMatch[1].length + boldMatch[2].length) {
+            this.replaceWithFormat(textNode, boldMatch, 'bold');
+            return;
+        }
+        
+        // Check for *text* (italic)
+        const italicMatch = text.match(/(.*?)(\*[^*]*\*)(.*)/);
+        if (italicMatch && cursorPos > italicMatch[1].length && cursorPos <= italicMatch[1].length + italicMatch[2].length) {
+            this.replaceWithFormat(textNode, italicMatch, 'italic');
+            return;
+        }
+    }
+
+    replaceWithFormat(textNode, match, format) {
+        const [fullMatch, before, formatText, after] = match;
+        const innerText = formatText.slice(format === 'code' ? 1 : (format === 'bold' ? 2 : 1), 
+                                         format === 'code' ? -1 : (format === 'bold' ? -2 : -1));
+        
+        let formattedElement;
+        switch (format) {
+            case 'code':
+                formattedElement = document.createElement('code');
+                break;
+            case 'bold':
+                formattedElement = document.createElement('strong');
+                break;
+            case 'italic':
+                formattedElement = document.createElement('em');
+                break;
+        }
+        formattedElement.textContent = innerText;
+        
+        // Replace the text node
+        const newNode = document.createDocumentFragment();
+        if (before) newNode.appendChild(document.createTextNode(before));
+        newNode.appendChild(formattedElement);
+        if (after) newNode.appendChild(document.createTextNode(after));
+        
+        textNode.parentNode.replaceChild(newNode, textNode);
+    }
+
+    handleAutoFormatting() {
+        // Handle automatic bullet formatting
+        const selection = window.getSelection();
+        if (selection.rangeCount === 0) return;
+        
+        const range = selection.getRangeAt(0);
+        const currentElement = range.commonAncestorContainer;
+        
+        // Check if we're at the start of a line with '- '
+        if (currentElement.nodeType === Node.TEXT_NODE) {
+            const text = currentElement.textContent;
+            if (text.match(/^- /)) {
+                this.convertToBullet(currentElement);
+            }
+        }
+    }
+
+    handleEnterKey() {
+        // Handle blank line -> normal mode
+        const selection = window.getSelection();
+        if (selection.rangeCount === 0) return;
+        
+        const range = selection.getRangeAt(0);
+        const currentElement = range.commonAncestorContainer;
+        
+        if (currentElement.nodeType === Node.TEXT_NODE && currentElement.textContent.trim() === '') {
+            this.convertToNormal(currentElement);
+        }
+    }
+
+    convertToBullet(textNode) {
+        const li = document.createElement('li');
+        li.textContent = textNode.textContent.replace(/^- /, '');
+        textNode.parentNode.replaceChild(li, textNode);
+        
+        // Set cursor to end of li
+        const range = document.createRange();
+        const selection = window.getSelection();
+        range.selectNodeContents(li);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+
+    convertToNormal(textNode) {
+        const p = document.createElement('p');
+        p.appendChild(document.createTextNode(''));
+        textNode.parentNode.replaceChild(p, textNode);
+        
+        // Set cursor in paragraph
+        const range = document.createRange();
+        const selection = window.getSelection();
+        range.setStart(p, 0);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+
+    handleSelection() {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0 && !selection.isCollapsed) {
+            this.currentSelection = selection.getRangeAt(0);
+            this.showFormatPopup();
+        } else {
+            this.hideFormatPopup();
+        }
+    }
+
+    showFormatPopup() {
+        if (this.popup) this.hideFormatPopup();
+        
+        this.popup = document.createElement('div');
+        this.popup.className = 'format-popup';
+        this.popup.innerHTML = `
+            <button class="format-btn" data-format="normal">Normal</button>
+            <button class="format-btn" data-format="bold">B</button>
+            <button class="format-btn" data-format="italic">I</button>
+            <button class="format-btn" data-format="code">Code</button>
+            <button class="format-btn" data-format="title">H1</button>
+            <button class="format-btn" data-format="bullet">•</button>
+        `;
+        
+        // Position popup near selection
+        const rect = this.currentSelection.getBoundingClientRect();
+        this.popup.style.left = rect.left + 'px';
+        this.popup.style.top = (rect.top - 40) + 'px';
+        
+        document.body.appendChild(this.popup);
+        
+        // Add format handlers
+        this.popup.addEventListener('click', (e) => {
+            const format = e.target.dataset.format;
+            if (format) this.applyFormat(format);
+        });
+    }
+
+    applyFormat(format) {
+        if (!this.currentSelection) return;
+        
+        if (format === 'normal') {
+            // Special handling for normal format - remove all formatting
+            this.removeFormatting();
+        } else {
+            const selectedText = this.currentSelection.toString();
+            let formattedText;
+            
+            switch (format) {
+                case 'bold':
+                    formattedText = `<strong>${selectedText}</strong>`;
+                    break;
+                case 'italic':
+                    formattedText = `<em>${selectedText}</em>`;
+                    break;
+                case 'code':
+                    formattedText = `<code>${selectedText}</code>`;
+                    break;
+                case 'title':
+                    formattedText = `<h1>${selectedText}</h1>`;
+                    break;
+                case 'bullet':
+                    formattedText = `<li>${selectedText}</li>`;
+                    break;
+            }
+            
+            this.currentSelection.deleteContents();
+            const fragment = document.createRange().createContextualFragment(formattedText);
+            this.currentSelection.insertNode(fragment);
+        }
+        
+        this.hideFormatPopup();
+    }
+
+    removeFormatting() {
+        // Get the selected content including any HTML tags
+        const range = this.currentSelection;
+        const selectedContent = range.extractContents();
+        
+        // Create a temporary div to process the content
+        const tempDiv = document.createElement('div');
+        tempDiv.appendChild(selectedContent);
+        
+        // Extract just the text content, removing all HTML tags
+        const plainText = tempDiv.textContent || tempDiv.innerText || '';
+        
+        // Insert the plain text back
+        const textNode = document.createTextNode(plainText);
+        range.insertNode(textNode);
+        
+        // Clear selection
+        window.getSelection().removeAllRanges();
+    }
+
+    handleClickOutside(e) {
+        if (this.popup && !this.popup.contains(e.target) && !this.editor.contains(e.target)) {
+            this.hideFormatPopup();
+        }
+    }
+
+    hideFormatPopup() {
+        if (this.popup) {
+            this.popup.remove();
+            this.popup = null;
+        }
+    }
+
+    getMarkdown() {
+        // Convert HTML back to markdown
+        return this.htmlToMarkdown(this.editor.innerHTML);
+    }
+
+    htmlToMarkdown(html) {
+        let markdown = html
+            // De-escape HTML entities first
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            
+            // Convert formatting
+            .replace(/<strong>(.*?)<\/strong>/g, '**$1**')
+            .replace(/<em>(.*?)<\/em>/g, '*$1*')
+            .replace(/<code>(.*?)<\/code>/g, '`$1`')
+            
+            // Convert headings with single blank line after
+            .replace(/<h1>(.*?)<\/h1>/g, '# $1\n')
+            .replace(/<h2>(.*?)<\/h2>/g, '## $1\n')
+            .replace(/<h3>(.*?)<\/h3>/g, '### $1\n')
+            
+            // Convert bullets to newlines (no trailing newline for consecutive bullets)  
+            .replace(/<li>(.*?)<\/li>/g, '- $1\n')
+            
+            // Convert paragraphs with exactly one blank line between
+            .replace(/<p>(.*?)<\/p>/g, '$1\n\n')
+            .replace(/<br\s*\/?>/g, '\n')
+            
+            // Strip remaining HTML
+            .replace(/<[^>]*>/g, '');
+        
+        // Clean up spacing - ensure exactly one blank line between paragraphs
+        markdown = markdown
+            .replace(/\n{3,}/g, '\n\n') // Multiple blank lines -> single blank line
+            .replace(/\n\n\n/g, '\n\n') // Triple newlines -> double
+            .trim();
+        
+        // Ensure single blank line after headings
+        markdown = markdown
+            .replace(/(^|\n)(#{1,6} .+)\n([^\n])/gm, '$1$2\n\n$3');
+        
+        // Ensure bullet items are on newlines but consecutive bullets stay together
+        markdown = markdown
+            .replace(/([^\n])(- )/g, '$1\n$2')     // Add newline before bullets
+            .replace(/(- .+?)\n\n(- )/gs, '$1\n$2'); // Remove blank lines between consecutive bullets (global, dotall)
+        
+        return markdown;
+    }
+
+    cleanup() {
+        if (this.clickOutsideHandler) {
+            document.removeEventListener('mousedown', this.clickOutsideHandler);
+        }
+        this.hideFormatPopup();
+    }
+}
+
 // Initialize editor when page loads
 let editor;
 document.addEventListener('DOMContentLoaded', () => {
     editor = new SnippetEditor();
+    
+    // Set initial history state if none exists
+    if (!window.history.state) {
+        const snippetPath = URLManager.urlToSnippetPath(window.location.href);
+        if (snippetPath === null) {
+            // Will be handled by initializeFromURL redirect
+            return;
+        }
+        window.history.replaceState(
+            { snippetPath, title: 'miso' }, 
+            'miso', 
+            window.location.pathname
+        );
+    }
 });
