@@ -1,5 +1,6 @@
 # changes
-*special page that shows recently updated features with breadcrumb navigation link*
+
+*special page that shows recently updated features*
 
 When we request the `/~recent` URL (eg. localhost:5000/~recent), we should see a list of recently updated feature snippets. Each item should be in child-view format (i.e. title/summary both on one line), with the date of edit visible. Clicking on the item should go to the feature snippet URL.
 
