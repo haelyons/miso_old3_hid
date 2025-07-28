@@ -56,7 +56,38 @@ When implementing user requests, follow this five-level abstraction approach:
 - Test commands: `npm test` (system-wide), `npx jest path/to/feature.test.js` (feature-specific)
 - Working tests: Breadcrumbs feature fully tested with 12 passing tests
 
-## Recent Session Summary (2025-07-28)
+## Recent Session Summary (2025-07-28 Part 2)
+
+**Changes Feature Implementation:**
+1. **Recent Changes Page** - Added `/~recent` URL to show recently modified snippets
+   - Backend scans all `.md` files in spec/ directory for modification timestamps
+   - Filters out metafolder implementation files (dot-prefixed directories)
+   - Returns 20 most recently modified feature specifications
+   - Each item displays title, summary, and relative modification date
+   
+2. **Recent Button Integration** - Added navigation button to breadcrumbs
+   - "recent" button appears on right side of breadcrumbs bar
+   - Styled to match existing edit button appearance
+   - Present on all snippet pages except the recent changes page itself
+   - Provides quick access to `/~recent` from anywhere in the system
+
+3. **URL Routing Updates** - Modified navigation behavior
+   - Root URL `/` now redirects to `/miso` (main specification)
+   - Special route `/~recent` handled separately from snippet paths
+   - Maintained auto-scroll to top on all page navigation
+
+**Implementation Details:**
+- Flask: Added `/api/changes` endpoint with metafolder filtering
+- JavaScript: Updated URL routing, breadcrumb rendering, and changes page display
+- CSS: Added button styling and inline child-view layout
+- Feature consolidation: Merged separate "recent-link" into unified "changes" feature
+
+**Specifications Created:**
+- `spec/miso/editor/breadcrumbs/changes.md` - Complete changes feature specification
+- `spec/miso/editor/breadcrumbs/.changes/` - Full 5-level workflow documentation
+- `spec/miso/editor/auto-scroll.md` - Auto-scroll navigation behavior
+
+## Previous Session Summary (2025-07-28 Part 1)
 
 **Editor Layout Modernization:**
 1. **Single-Column Layout** - Replaced two-column side-by-side with vertical single-column design

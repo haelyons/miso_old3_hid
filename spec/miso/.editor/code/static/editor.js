@@ -8,6 +8,10 @@ class URLManager {
             return null; // Signal that we need to redirect
         }
         
+        if (cleanPath === '~recent') {
+            return '~recent'; // Special case for changes page
+        }
+        
         if (cleanPath === 'miso') {
             return 'miso.md';
         }
@@ -74,6 +78,9 @@ class SnippetEditor {
             // Root URL detected, redirect to /miso
             window.history.replaceState({ snippetPath: 'miso.md', title: 'miso' }, 'miso', '/miso');
             this.loadSnippet('miso.md', false);
+        } else if (snippetPath === '~recent') {
+            // Special route for changes page
+            this.loadChangesPage();
         } else {
             this.loadSnippet(snippetPath, false); // false = don't update URL
         }
@@ -108,10 +115,70 @@ class SnippetEditor {
                 URLManager.updateURL(path, snippet.title);
             }
             
+            // Scroll to top of page
+            window.scrollTo(0, 0);
+            
         } catch (error) {
             console.error('Error loading snippet:', error);
             this.contentView.innerHTML = '<div class="error">Error loading snippet</div>';
         }
+    }
+    
+    async loadChangesPage() {
+        try {
+            const response = await fetch('/api/changes');
+            if (!response.ok) {
+                throw new Error('Failed to load changes');
+            }
+            
+            const data = await response.json();
+            this.renderChangesPage(data.changes);
+            
+            // Update page title
+            document.title = 'miso';
+            
+            // Scroll to top of page
+            window.scrollTo(0, 0);
+            
+        } catch (error) {
+            console.error('Failed to load changes:', error);
+            // Fallback to miso.md
+            this.loadSnippet('miso.md', false);
+        }
+    }
+    
+    renderChangesPage(changes) {
+        const breadcrumbsHtml = '<nav class="breadcrumbs"><div class="breadcrumb-trail"><span class="breadcrumb-current">recent changes</span></div></nav>';
+        
+        const changesHtml = changes.map(change => `
+            <div class="child-item" onclick="editor.navigateToPath('${change.path}')">
+                <div class="child-item-title">${change.title}</div>
+                <div class="child-item-summary">${change.summary} • ${change.modified_readable}</div>
+            </div>
+        `).join('');
+        
+        this.contentView.innerHTML = breadcrumbsHtml + `
+            <h1>recent changes</h1>
+            <div class="child-view-inline">
+                ${changesHtml}
+            </div>
+        `;
+        
+        // Clear child view since we're showing changes in content
+        this.childView.innerHTML = '';
+        
+        // Set current path to empty to indicate we're on changes page
+        this.currentPath = '';
+    }
+    
+    navigateToPath(path) {
+        // Convert spec path to snippet path and navigate
+        const snippetPath = path;
+        this.loadSnippet(snippetPath);
+    }
+    
+    navigateToRecent() {
+        window.location.href = '/~recent';
     }
     
     async renderContent(snippet) {
@@ -376,7 +443,14 @@ class SnippetEditor {
             }
         }).join('');
         
-        return `<nav class="breadcrumbs">${breadcrumbsHtml}</nav>`;
+        // Add recent link only if we're not on the recent changes page
+        const recentLinkHtml = this.currentPath !== '' ? 
+            '<a href="#" class="recent-link" onclick="editor.navigateToRecent()">recent</a>' : '';
+        
+        return `<nav class="breadcrumbs">
+            <div class="breadcrumb-trail">${breadcrumbsHtml}</div>
+            ${recentLinkHtml}
+        </nav>`;
     }
     
     setupBreadcrumbHandlers() {

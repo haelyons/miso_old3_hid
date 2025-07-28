@@ -1,14 +1,19 @@
 ~notes
 
-- workflow needs to be setup manually every time
-- observability tools need to be setup
-- read over all old chats in order? maybe?
-- need to be able to "compile" workflows down into scripts
+- we shouldn't be talking to the agent at all
+- we should do all edits by editing the feature tree
+- we should just add one-line "new feature" (name/one-liner)
+- system should put it automatically into the tree at the right place
+- snippets should be flaggable as "agent commands"
+  i.e. we specify agent workflow precisely, as bullet points.
 
-this is the stuff that should happen automatically.
+therefore:
 
-the big question is: is it easier to converse with an agent? Or easier to just write a new feature and have the LLM poke it into the right place in the tree?
+- need to work on the markdown editor, it's a critical part of the IDE
 
+the IDE should be managing the prompt context for you; that's sort of the point.
+managing multiple micro-agents for you.
 
-
+- how to do task X: we assemble the context and system prompt, fire off the LLM.
+- we record the chat log and the changes made to the files
 

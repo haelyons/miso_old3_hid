@@ -236,6 +236,76 @@ def get_console_logs():
     else:
         return jsonify({"console_logs": []})
 
+@app.route('/api/changes')
+def get_recent_changes():
+    """Return list of recently modified snippets with metadata"""
+    spec_root = Path("spec")
+    changes = []
+    
+    # Scan all .md files recursively
+    for md_file in spec_root.rglob("*.md"):
+        try:
+            # Skip files in metafolders (directories starting with dot)
+            if any(part.startswith('.') for part in md_file.parts):
+                continue
+                
+            # Get modification time
+            mod_time = os.path.getmtime(md_file)
+            
+            # Extract metadata
+            with open(md_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+                title = extract_title(content)
+                summary = extract_summary(content)
+            
+            # Build relative path for URL
+            relative_path = str(md_file.relative_to(spec_root))
+            
+            changes.append({
+                'title': title,
+                'summary': summary,
+                'path': relative_path,
+                'modified': mod_time,
+                'modified_readable': format_date(mod_time)
+            })
+        except Exception:
+            continue  # Skip files with errors
+    
+    # Sort by modification time (newest first)
+    changes.sort(key=lambda x: x['modified'], reverse=True)
+    
+    # Return most recent 20 items
+    return jsonify({'changes': changes[:20]})
+
+def extract_title(content):
+    """Extract first # heading"""
+    for line in content.split('\n'):
+        if line.startswith('# '):
+            return line[2:].strip()
+    return "Untitled"
+
+def extract_summary(content):
+    """Extract first *italicized* line"""
+    for line in content.split('\n'):
+        if line.startswith('*') and line.endswith('*'):
+            return line[1:-1].strip()
+    return ""
+
+def format_date(timestamp):
+    """Convert timestamp to relative format"""
+    now = datetime.now()
+    mod_date = datetime.fromtimestamp(timestamp)
+    delta = now - mod_date
+    
+    if delta.days == 0:
+        return "Today"
+    elif delta.days == 1:
+        return "Yesterday"
+    elif delta.days < 7:
+        return f"{delta.days} days ago"
+    else:
+        return mod_date.strftime("%b %d, %Y")
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)

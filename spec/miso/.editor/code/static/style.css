@@ -323,6 +323,13 @@ html, body {
     padding: 10px 0;
     border-bottom: 1px solid #e1e4e8;
     font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.breadcrumb-trail {
+    flex-grow: 1;
 }
 
 .breadcrumb-link {
@@ -348,6 +355,25 @@ html, body {
     color: #24292e;
     font-weight: 600;
     padding: 4px 8px;
+}
+
+.recent-link {
+    background: #f6f8fa;
+    border: 1px solid #d1d9e0;
+    color: #24292e;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.recent-link:hover {
+    background: #e1e7ed;
+    border-color: #c9d1d9;
+    text-decoration: none;
 }
 
 .loading {
@@ -380,4 +406,16 @@ html, body {
     .breadcrumb-separator {
         margin: 0 4px;
     }
+}
+
+.child-view-inline {
+    background: #f6f8fa;
+    padding: 20px;
+    border-radius: 6px;
+    margin-top: 20px;
+}
+
+.child-view-inline .child-item {
+    background: white;
+    margin-bottom: 10px;
 }
