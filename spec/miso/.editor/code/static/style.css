@@ -97,7 +97,7 @@ html, body {
     font-size: 1.2rem;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
 }
 
 .add-child-btn {
@@ -114,6 +114,7 @@ html, body {
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s;
+    margin-left: auto;
 }
 
 .add-child-btn:hover {
@@ -160,6 +161,15 @@ html, body {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 20px;
+}
+
+.content-header h1 {
+    flex: 1;
+}
+
+.content-header .inline-edit-btn,
+.content-header .edit-button-group {
+    margin-left: auto;
 }
 
 .inline-edit-btn {
@@ -329,7 +339,11 @@ html, body {
 }
 
 .breadcrumb-trail {
-    flex-grow: 1;
+    flex: 1;
+}
+
+.recent-link {
+    margin-left: auto;
 }
 
 .breadcrumb-link {

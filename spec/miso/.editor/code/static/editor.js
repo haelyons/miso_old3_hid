@@ -207,11 +207,15 @@ class SnippetEditor {
         const title = titleMatch ? titleMatch[1] : 'Untitled';
         const contentWithoutTitle = html.replace(/<h1>([^<]+)<\/h1>/, '');
         
-        // Add edit button inline with title
+        // Create content header with properly aligned edit button
         const editButton = `<button class="edit-btn inline-edit-btn" onclick="editor.startContentEditing()">Edit</button>`;
-        const titleWithButton = `<h1>${title} ${editButton}</h1>`;
+        const contentHeader = `
+            <div class="content-header">
+                <h1>${title}</h1>
+                ${editButton}
+            </div>`;
         
-        this.contentView.innerHTML = breadcrumbsHtml + titleWithButton + `<div class="rendered-content">${contentWithoutTitle}</div>`;
+        this.contentView.innerHTML = breadcrumbsHtml + contentHeader + `<div class="rendered-content">${contentWithoutTitle}</div>`;
     }
     
     renderChildren(snippet) {
@@ -338,10 +342,10 @@ class SnippetEditor {
         const editButton = document.querySelector('.inline-edit-btn');
         if (editButton) {
             editButton.outerHTML = `
-                <span class="edit-button-group">
+                <div class="edit-button-group">
                     <button class="edit-btn save inline-edit-btn" onclick="editor.saveContentChanges()">Save</button>
                     <button class="edit-btn cancel inline-edit-btn" onclick="editor.cancelContentEditing()">Cancel</button>
-                </span>
+                </div>
             `;
         }
         
