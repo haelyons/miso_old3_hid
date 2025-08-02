@@ -1,11 +1,11 @@
 # search
 _retrieving product metadata_
 
-We want to accept a products URL from an e-commerce website, and parse it to return metadata, specifically:
+We want to accept a product's URL from a supported e-commerce website. The system first checks an internal database for an existing record of the product. If not found, it uses an external API (Diffbot) to retrieve the product's metadata.
+
+This metadata includes:
 - product name, seller name, image links, description, category path, price, datetime
 
-We may want to collect information more targeted at the seller to create a profile for them as well. This could include the current rating (though we don't need to store that), their location, and the date the store was established.
+The system may also collect seller-specific information like their location and store establishment date to build a seller profile.
 
-We want to keep a record of the products that we've processed, for which we will use a database.
-
-The database will also be used to parse our input URLs by providing matched patterns.
+All processed products are stored in a database, which acts as a cache to minimize external API calls. The URL parsing logic is handled within the application using predefined patterns for each supported merchant.

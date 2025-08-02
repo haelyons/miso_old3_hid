@@ -1,4 +1,6 @@
 # bar
-_not the dark kind, the web kind_
+_interactive product URL input_
 
-Minimal search bar to enter a product URL. The arrow should be to the right of it. It should be a plain, stylised arrow vertically centered with the bar. When you hover it should have a circular border that appears around it, matching the Y dimensions of the bar.
+A responsive search form for entering a product URL. The input field provides immediate visual feedback, changing color to indicate whether the current URL is valid and from a supported platform.
+
+The form includes a submission button, which is enabled only when a valid URL is entered. This ensures that only well-formed requests are sent to the backend for processing. The button's appearance also changes to reflect its state (e.g., disabled, submitting).

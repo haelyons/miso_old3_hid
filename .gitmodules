@@ -1,0 +1,3 @@
+[submodule "ref/id.js"]
+	path = ref/id.js
+	url = https://github.com/haelyons/id.js

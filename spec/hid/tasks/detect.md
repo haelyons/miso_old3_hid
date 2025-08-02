@@ -1,8 +1,6 @@
 # detect
 _evaluate carbon_
 
-We will receive segmented product masks from the mask stage. We will use these masks in conjunction with an API to receive scoring on the likelihood of the images being generated using AI tooling. 
+Following the "mask" stage, the "detect" stage evaluates the segmented product images for signs of AI generation. The masks are sent to a specialized API that returns a score indicating the likelihood that the image was created using AI tools.
 
-We may receive more detailed information regarding exactly which tools have been used. We should receive some indication of whether it is more or less likely the product is AI. 
-
-The returned confidence of the prediction should be made clear to the user, though less clear than the overall result. Leeway needs to exist for there to be more or less detail in the provided result.
+The results should be presented to the user in a clear, understandable way. While the primary output is a simple "likely" or "unlikely" determination, the system may also receive and display more detailed information, such as the specific AI tools that were potentially used and the confidence level of the prediction. This provides a transparent and informative analysis for the user.

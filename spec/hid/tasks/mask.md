@@ -1,6 +1,6 @@
-# mask 
+# mask
 _product segmentation_
 
-We will receive product packshot URLs from the search step, and need to extract the products from these images. We have an endpoint that this system will call in order to accomplish that, where it provides product metadata acquired in the previous step.
+After a product is successfully retrieved, the user can initiate an analysis to check for AI-generated content. The first step in this analysis is "masking," where the system isolates the product from its background in the provided images.
 
-We want the resulting masks to be displayed to the user, and to report activity. It should flag if the endpoint connection is failing.
+This is achieved by sending the product image URLs to an external segmentation API. The API returns masks of the detected products, which are then passed to the "detect" stage. The system should provide visual feedback to the user during this process and clearly indicate any failures in communicating with the segmentation API.
