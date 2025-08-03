@@ -1,4 +1,8 @@
-# api (search)
-_for when you can't do it yourself (because Google already has a monopoly)_
+# api
+_external data integration_
 
-We use the DiffBot API. The spec will be provided shortly, for now a dummy implementation is fine (dummy links with dummy returns).
+Integrate with Diffbot Product API for extracting structured data from e-commerce pages. API calls only when products don't exist in internal database.
+
+Handle API errors gracefully with clear user feedback. Normalize responses into consistent format regardless of source platform.
+
+Cache all successful responses locally to minimize external dependencies and improve response times for repeat queries.

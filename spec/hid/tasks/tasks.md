@@ -1,8 +1,9 @@
 # tasks
-_runnable components of h.id_
+_core system components_
 
-The h.id system consists of 4 main tasks:
-- `search` - Extract product metadata from e-commerce URLs
-- `mask` - Segment products from images  
-- `detect` - Score AI likelihood from product masks
-- `views` - Web interface for progressive observability
+The h.id system performs three sequential analysis tasks:
+- `search` - Extract product metadata from URLs
+- `mask` - Segment product images for analysis  
+- `detect` - Score AI generation likelihood
+
+Each task appears as a progressive card in the interface, building user confidence through immediate feedback and manual progression controls.

@@ -26,11 +26,20 @@ Each specification snippet should:
 
 ## Agent Workflow
 
-When implementing user requests, follow this five-level abstraction approach:
+There are 2 user request modes. One is prototype, and the other production. 
+
+When implementing user requests in prototype mode, follow this two-level abstraction approach:
+
+1. **Specification**: Add/modify feature specification snippets in `spec/`
+2. **References**: Read provided reference implementations (if any) and relevant dimensions (ie. aesthetic / functionality)
+3. **Code**: Write runnable code in a `code/` subfolder with the feature's metafolder (preluded with a `.` - so `.code`)
+
+When implementing user requests in production mode, follow this five-level abstraction approach:
 
 1. **Specification**: Add/modify feature specification snippets in `spec/`
 2. **Test Writing**: Create `testing.md` with executable requirements as concise bullet points
 3. **Pseudocode**: Create `pseudocode.md` with human-readable descriptions and natural language pseudocode
 4. **Implementation**: Create `implementation.md` with actual code examples in the target language  
-5. **Code**: Write runnable code in a `code/` subfolder within the feature's metafolder
+5. **Code**: Write runnable code in a `code/` subfolder with the feature's metafolder (preluded with a `.` - so `.code`)
 
+You will receive a specification, and a workflow mode (prototype or production). Run through the steps without any user interaction. All code should be in a top level spec/<project>/.code/ directory.

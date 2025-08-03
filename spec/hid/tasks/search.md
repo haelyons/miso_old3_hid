@@ -1,11 +1,8 @@
 # search
-_retrieving product metadata_
+_product metadata extraction_
 
-We want to accept a product's URL from a supported e-commerce website. The system first checks an internal database for an existing record of the product. If not found, it uses an external API (Diffbot) to retrieve the product's metadata.
+Extract product information from e-commerce URLs through URL parsing, database lookup, and external API integration. The system accepts URLs from supported platforms (Etsy, RedBubble, Alibaba) and returns structured product data.
 
-This metadata includes:
-- product name, seller name, image links, description, category path, price, datetime
+Process: Parse URL to identify merchant and product ID, check internal database for cached data, fallback to Diffbot API for new products. All results stored locally for future requests.
 
-The system may also collect seller-specific information like their location and store establishment date to build a seller profile.
-
-All processed products are stored in a database, which acts as a cache to minimize external API calls. The URL parsing logic is handled within the application using predefined patterns for each supported merchant.
+Output format: seller name, product title, images, price, description. Data normalized across different platforms for consistent presentation in product cards.
